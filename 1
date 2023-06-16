@@ -1,0 +1,81 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class Final1 {
+    private static final String FILE_PATH = "favorite.txt";
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("=== 我的最愛網址儲存與編輯系統 ===");
+        System.out.println("請輸入指令：");
+        System.out.println("1. 顯示所有網址");
+        System.out.println("2. 新增網址");
+        System.out.println("3. 結束程式");
+
+        int choice = scanner.nextInt();
+        scanner.nextLine(); // 消耗換行符
+
+        switch (choice) {
+            case 1:
+                displayAllFavorites();
+                break;
+            case 2:
+                addNewFavorite(scanner);
+                break;
+            case 3:
+                System.out.println("程式已結束。");
+                break;
+            default:
+                System.out.println("無效的指令，程式已結束。");
+        }
+
+        scanner.close();
+    }
+
+    private static void displayAllFavorites() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            System.out.println("讀取檔案時發生錯誤：" + e.getMessage());
+        }
+    }
+
+    private static void addNewFavorite(Scanner scanner) {
+        System.out.println("請輸入網址：");
+        String url = scanner.nextLine();
+
+        if (!validateUrl(url)) {
+            System.out.println("網址格式錯誤，請重新輸入。");
+            return;
+        }
+
+        System.out.println("請輸入網址說明：");
+        String description = scanner.nextLine();
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH, true))) {
+            writer.write(url + " " + description);
+            writer.newLine();
+            System.out.println("已儲存網址與網址說明。");
+        } catch (IOException e) {
+            System.out.println("寫入檔案時發生錯誤：" + e.getMessage());
+        }
+    }
+
+    private static boolean validateUrl(String url) {
+        // 使用正規表達式驗證網址格式
+        String regex = "^(http|https)://([\\w-]+\\.)+[\\w-]+(/[\\w-./?%&=]*)?$";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(url);
+        return matcher.matches();
+    }
+}
