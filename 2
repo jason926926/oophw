@@ -1,0 +1,90 @@
+import java.util.Random;
+
+class Car implements Runnable {
+    private static final int SIMULATION_COUNT = 20;
+    private static final int MAX_DISTANCE = 350;
+    private static final int FREE_DISTANCE = 20;
+    private static final double RATE_PER_KM = 1.2;
+    private static final double DISCOUNT_RATE = 0.75;
+    private static final double ETAG_DISCOUNT = 0.9;
+
+    private final String carName;
+    private final Random random;
+    private double totalCharge;
+
+    public Car(String carName) {
+        this.carName = carName;
+        this.random = new Random();
+        this.totalCharge = 0.0;
+    }
+
+    @Override
+    public void run() {
+        System.out.println(carName + " 開始模擬通行...");
+        for (int i = 0; i < SIMULATION_COUNT; i++) {
+            int distance = random.nextInt(MAX_DISTANCE + 1);
+            double charge = calculateCharge(distance);
+            totalCharge += charge;
+            System.out.println(carName + " 模擬通行距離：" + distance + " 公里，收費金額：" + charge + " 元");
+
+            try {
+                int sleepTime = random.nextInt(3000) + 1000; // 1000-4000 milliseconds
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println(carName + " 模擬結束。總收費金額：" + totalCharge + " 元");
+    }
+
+    private double calculateCharge(int distance) {
+        if (distance <= FREE_DISTANCE) {
+            return 0.0;
+        } else if (distance <= 200) {
+            return (distance - FREE_DISTANCE) * RATE_PER_KM * ETAG_DISCOUNT;
+        } else {
+            double charge = (200 - FREE_DISTANCE) * RATE_PER_KM * ETAG_DISCOUNT;
+            charge += (distance - 200) * RATE_PER_KM * DISCOUNT_RATE * ETAG_DISCOUNT;
+            return charge;
+        }
+    }
+
+    public double getTotalCharge() {
+        return totalCharge;
+    }
+}
+
+public class ETAGSimulation {
+    private static final int NUM_CARS = 5;
+
+    public static void main(String[] args) {
+        Thread[] threads = new Thread[NUM_CARS];
+        Car[] cars = new Car[NUM_CARS];
+
+        for (int i = 0; i < NUM_CARS; i++) {
+            System.out.print("請輸入車子名稱：");
+            String carName = System.console().readLine();
+            cars[i] = new Car(carName);
+            threads[i] = new Thread(cars[i]);
+        }
+
+        for (Thread thread : threads) {
+            thread.start();
+        }
+
+        try {
+            for (Thread thread : threads) {
+                thread.join();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        double totalCharge = 0.0;
+        for (Car car : cars) {
+            totalCharge += car.getTotalCharge();
+        }
+
+        System.out.println("所有車輛模擬結束。所有被收費的總金額：" + totalCharge + " 元");
+    }
+}
